@@ -1,0 +1,72 @@
+- import_playbook: playbooks/deploy_cluster.yml
+
+
+- name: Post Install OC config
+  hosts: masters
+  tasks:
+    - name: Create PV Directory
+      shell: "mkdir /root/pvs"
+      run_once: yes
+      tags: pvconf
+    - name: Create PVs
+      template:
+        src: templates/pvcreate.j2
+        dest: /root/pvs/{{ item }}
+      with_sequence: start=1 end=200
+      run_once: yes
+      tags: pvconf
+    - name: OC Create PVs
+      shell: "cat /root/pvs/* | oc create -f -"
+      run_once: yes
+      tags: pvconf
+
+- name: Configure Load Balancer Hack
+  hosts: all
+  tasks:
+    - when: inventory_hostname in groups['lb']
+      block:
+        - name: Open Port 80
+          iptables:
+            chain: INPUT
+            jump: ACCEPT
+            protocol: tcp
+            match: tcp
+            destination_port: 80
+          become: yes
+          tags: haconf
+        - name: Place HA Proxy config
+          template:
+            src: templates/haproxy.cfg.j2
+            dest: /etc/haproxy/haproxy.cfg
+            owner: root
+            group: root
+            mode: 0644     
+          tags: haconf
+        - name: Restart haproxy
+          service:
+            name: haproxy
+            state: restarted
+          tags: haconf
+
+- name: Pull kube
+  hosts: masters[0] 
+  tasks:
+    - fetch: "src=/root/.kube/config dest=/root/.kube/config flat=yes"
+      tags: cicd
+
+- name: Deploy CI/CD
+  hosts: localhost
+  tasks:
+    - shell: "oc import-image docker-registry.default.svc:5000/gogs:latest --from=isolated1.$GUID.internal:5000/wkulhanek/gogs:latest --confirm --insecure=true -n openshift"
+      tags: cicd
+    - shell: "oc import-image docker-registry.default.svc:5000/sonatype/nexus3:latest --from=isolated1.$GUID.internal:5000/sonatype/nexus3:latest --confirm --insecure=true -n openshift"
+      tags: cicd
+    - shell: "oc import-image docker-registry.default.svc:5000/rhscl/postgresql:latest --from=isolated1.$GUID.internal:5000/rhscl/postgresql-95-rhel7:latest --confirm --insecure=true -n openshift"
+      tags: cicd
+    - shell: "oc tag postgresql:latest postgresql:9.5 -n openshift"
+      tags: cicd
+    - shell: "oc import-image docker-registry.default.svc:5000/openshift/jboss-eap70-openshift:latest --from=isolated1.$GUID.internal:5000/jboss-eap-7/eap70-openshift:latest --confirm --insecure=true -n openshift"
+      tags: cicd
+    - shell: "oc tag jboss-eap70-openshift:latest jboss-eap70-openshift:1.6 -n openshift"
+      tags: cicd
+

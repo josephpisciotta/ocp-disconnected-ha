@@ -1,0 +1,83 @@
+deployment_type: openshift-enterprise
+containerized: false
+openshift_disable_check: "disk_availability,memory_availability,docker_image_availability"
+
+osm_default_node_selector: 'env=app'
+
+
+osm_use_cockpit: true
+osm_cockpit_plugins:
+  - 'cockpit-kubernetes'
+
+
+openshift_master_api_port: 443
+openshift_master_console_port: 443
+
+openshift_master_cluster_method: native
+openshift_master_cluster_hostname: loadbalancer1.56af.internal
+openshift_master_cluster_public_hostname: loadbalancer1.56af.example.opentlc.com
+openshift_master_default_subdomain: apps.56af.example.opentlc.com
+#openshift_master_ca_certificate: {'certfile': '/root/intermediate_ca.crt', 'keyfile': '/root/intermediate_ca.key'}
+openshift_master_overwrite_named_certificates: True
+
+
+# sets the debug level for all OpenShift components.  Default is 2
+#debug_level: 8
+
+system_images_registry: isolated1.56af.internal:5000
+
+openshift_docker_ent_reg: 'isolated1.56af.internal:5000'
+
+oreg_url: "isolated1.56af.internal:5000/openshift3/ose-${component}:${version}"
+
+openshift_examples_modify_imagestreams: true
+openshift_docker_additional_registries: isolated1.56af.internal:5000
+openshift_docker_insecure_registries: isolated1.56af.internal:5000
+openshift_docker_blocked_registries: registry.access.redhat.com,docker.io
+openshift_service_catalog_image_prefix: "isolated1.56af.internal:5000/openshift3/ose-"
+openshift_service_catalog_image_version: v3.9
+openshift_cockpit_deployer_prefix: "isolated1.56af.internal:5000/openshift3/"
+template_service_broker_prefix: "isolated1.56af.internal:5000/openshift3/"
+template_service_broker_version: v3.9
+openshift_web_console_prefix: "isolated1.56af.internal:5000/openshift3/"
+openshift_web_console_version: v3.9
+
+
+openshift_master_identity_providers:
+  - name: 'htpasswd_auth'
+    login: 'true'
+    challenge: 'true'
+    kind: 'HTPasswdPasswordIdentityProvider'
+    filename: '/etc/origin/master/htpasswd'
+
+openshift_master_htpasswd_file: "/root/htpasswd.openshift"
+
+openshift_additional_projects:
+  openshift-template-service-broker: 
+    default_node_selector: ''
+
+
+openshift_hosted_router_selector: 'env=infra'
+openshift_hosted_router_replicas: 2
+
+openshift_hosted_registry_selector: 'env=infra'
+openshift_hosted_registry_replicas: 1
+
+openshift_hosted_registry_storage_kind: nfs
+openshift_hosted_registry_storage_access_modes: 
+  - 'ReadWriteMany'
+openshift_hosted_registry_storage_nfs_directory: "/srv/nfs"
+openshift_hosted_registry_storage_nfs_options: '*(rw,root_squash)'
+openshift_hosted_registry_storage_volume_name: registry
+openshift_hosted_registry_storage_volume_size: 20Gi
+openshift_hosted_registry_pullthrough: true
+openshift_hosted_registry_acceptschema2: true
+openshift_hosted_registry_enforcequota: true
+
+openshift_enable_service_catalog: true
+template_service_broker_install: true
+template_service_broker_selector:
+  env: "infra"
+openshift_template_service_broker_namespaces:
+  - 'openshift'
+ansible_service_broker_install: false

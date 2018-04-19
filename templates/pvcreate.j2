@@ -1,0 +1,20 @@
+{
+  "apiVersion": "v1",
+  "kind": "PersistentVolume",
+  "metadata": {
+    "name": "{{ item }}"
+  },
+  "spec": {
+    "capacity": {
+        "storage": "10Gi"
+    },
+    "accessModes": [ "ReadWriteOnce" ],
+    "nfs": {
+        "path": "/srv/nfs/user-vols/{{ item }}",
+{% for host in groups['nfs'] %}
+        "server": "{{ hostvars[host].inventory_hostname }}"
+{% endfor %}
+    },
+    "persistentVolumeReclaimPolicy": "Recycle"
+  }
+}

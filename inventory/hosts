@@ -1,0 +1,53 @@
+[OSEv3:vars]
+
+timeout=60
+ansible_become=yes
+ansible_ssh_user=ec2-user
+
+forks=20
+pipelining=true
+
+[OSEv3:children]
+lb
+masters
+etcd
+nodes
+nfs
+
+[lb]
+loadbalancer1.56af.internal host_zone=us-east-1d public_name=loadbalancer1.56af.example.opentlc.com
+
+[masters]
+master1.56af.internal host_zone=us-east-1d
+master2.56af.internal host_zone=us-east-1d
+master3.56af.internal host_zone=us-east-1d
+
+[etcd]
+master1.56af.internal host_zone=us-east-1d
+master2.56af.internal host_zone=us-east-1d
+master3.56af.internal host_zone=us-east-1d
+
+[infranodes]
+infranode2.56af.internal
+infranode1.56af.internal
+
+
+
+[nodes]
+## These are the masters
+master1.56af.internal openshift_hostname=master1.56af.internal openshift_node_labels="{'logging':'true','openshift_schedulable':'False','cluster': '56af', 'zone': 'us-east-1d'}"
+master2.56af.internal openshift_hostname=master2.56af.internal openshift_node_labels="{'logging':'true','openshift_schedulable':'False','cluster': '56af', 'zone': 'us-east-1d'}"
+master3.56af.internal openshift_hostname=master3.56af.internal openshift_node_labels="{'logging':'true','openshift_schedulable':'False','cluster': '56af', 'zone': 'us-east-1d'}"
+
+## These are infranodes
+infranode2.56af.internal openshift_hostname=infranode2.56af.internal  openshift_node_labels="{'logging':'true','cluster': '56af', 'env':'infra', 'zone': 'us-east-1d'}"
+infranode1.56af.internal openshift_hostname=infranode1.56af.internal  openshift_node_labels="{'logging':'true','cluster': '56af', 'env':'infra', 'zone': 'us-east-1d'}"
+
+## These are regular nodes
+node3.56af.internal openshift_hostname=node3.56af.internal  openshift_node_labels="{'logging':'true','cluster': '56af', 'env':'app', 'zone': 'us-east-1d'}"
+node2.56af.internal openshift_hostname=node2.56af.internal  openshift_node_labels="{'logging':'true','cluster': '56af', 'env':'app', 'zone': 'us-east-1d'}"
+node1.56af.internal openshift_hostname=node1.56af.internal  openshift_node_labels="{'logging':'true','cluster': '56af', 'env':'app', 'zone': 'us-east-1d'}"
+
+
+[nfs]
+support1.56af.internal openshift_hostname=support1.56af.internal
