@@ -21,4 +21,4 @@ openshift_logging_es_nodeselector:
 openshift_logging_kibana_nodeselector: 
   env: "infra"
 openshift_logging_curator_nodeselector:
-  env:"infra"
+  env: "infra"
